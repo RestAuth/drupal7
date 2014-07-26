@@ -1,4 +1,5 @@
 <?php
+// vim: tw=79:expandtab:tabstop=2:shiftwidth=2
 
 $_restauth_connection;
 
@@ -6,7 +7,11 @@ $_restauth_connection;
 function restauth_connection() {
     global $_restauth_connection;
     if (is_null($_restauth_connection)) {
-        $_restauth_connection = new RestAuthConnection();
+        $_restauth_connection = new RestAuthConnection(
+            'http://[::1]:8000',
+            'example.com',
+            'nopass'
+        );
     }
     return $_restauth_connection;
 }
@@ -32,11 +37,11 @@ function restauth_help( $path, $arg ) {
  * We simply replace 'user_login_authenticate_validate' with 'extauth_login_validate'.
  */
 function restauth_form_user_login_alter(&$form, $form_state) {
-  unset($form['links']);
-  $form['#validate'] = array( 'user_login_name_validate', 'restauth_login_validate', 'user_login_final_validate' );
+  $form['#validate'] = array('user_login_name_validate', 'restauth_login_validate', 'user_login_final_validate');
+}
+function restauth_form_user_login_block_alter(&$form, $form_state) {
+  $form['#validate'] = array('user_login_name_validate', 'restauth_login_validate', 'user_login_final_validate');
 }
 
-
 function restauth_login_validate($form, &$form_state) {
-  die("validate!");
 }
