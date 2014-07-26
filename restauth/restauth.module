@@ -10,3 +10,33 @@ function restauth_connection() {
     }
     return $_restauth_connection;
 }
+
+
+/**
+ * Implement hook_help() to display a small help message if somebody clicks the "Help" link on the modules list.
+ */
+function restauth_help( $path, $arg ) {
+  switch ( $path ) {
+    case 'admin/help#extauth': {
+      return( '<p>' . t('RestAuth authentication.') . '</p>' );
+    }
+  }
+}
+
+/**
+ * Implement hook_form_alter() to change the behaviour of the login form.
+ *
+ * Login validators are set in the user_login_default_validators() function in user.module.
+ * They are normally set to array('user_login_name_validate',
+ * 'user_login_authenticate_validate', 'user_login_final_validate').
+ * We simply replace 'user_login_authenticate_validate' with 'extauth_login_validate'.
+ */
+function restauth_form_user_login_alter(&$form, $form_state) {
+  unset($form['links']);
+  $form['#validate'] = array( 'user_login_name_validate', 'restauth_login_validate', 'user_login_final_validate' );
+}
+
+
+function restauth_login_validate($form, &$form_state) {
+  die("validate!");
+}
