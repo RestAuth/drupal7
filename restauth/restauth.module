@@ -1,1 +1,12 @@
 <?php
+
+$_restauth_connection;
+
+
+function restauth_connection() {
+    global $_restauth_connection;
+    if (is_null($_restauth_connection)) {
+        $_restauth_connection = new RestAuthConnection();
+    }
+    return $_restauth_connection;
+}
