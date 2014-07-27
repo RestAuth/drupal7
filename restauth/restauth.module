@@ -53,6 +53,10 @@ function restauth_form_user_login_alter(&$form, $form_state) {
 function restauth_form_user_login_block_alter(&$form, $form_state) {
   $form['#validate'] = array('user_login_name_validate', 'restauth_login_validate', 'user_login_final_validate');
 }
+function restauth_form_user_login_form_alter(&$form, $form_state) {
+  die('Should never happen?');
+  $form['#validate'] = array('user_login_name_validate', 'restauth_login_validate', 'user_login_final_validate');
+}
 /**
  * TODO: Get user by name like here:
  *   https://api.drupal.org/api/drupal/modules!user!user.module/function/user_authenticate/7
@@ -62,7 +66,6 @@ function restauth_form_user_login_block_alter(&$form, $form_state) {
  */
 function restauth_login_validate($form, &$form_state) {
   // @todo: We still need to fetch the password, status and roles.
-
   global $user;
   $username = $form_state['values']['name'];
   $restauth_user = get_restauth_user($username);
