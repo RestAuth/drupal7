@@ -143,6 +143,7 @@ function restauth_form_user_profile_form_alter(&$form, $form_state) {
 
   // Update default data
   $form['account']['mail']['#default_value'] = $restauth_props['email'];
+  $form['account']['name']['#description'] = '';
   $form['account']['name']['#disabled'] = 1;  // disable renaming of account
   $form['account']['roles']['#default_value'] = array(DRUPAL_AUTHENTICATED_RID);
 
@@ -222,4 +223,10 @@ function restauth_user_profile_form_submit($form, &$form_state) {
 
   // Save data in local database
   user_profile_form_submit($form, $form_state);
+}
+
+function restauth_form_user_pass_alter(&$form, $form_state) {
+  die('user_pass');
+  $form['#validate'][] = 'restauth_validate_new_user';
+  $form['#submit'] = array('restauth_user_register_submit');
 }
