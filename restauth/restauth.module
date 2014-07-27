@@ -93,7 +93,7 @@ function restauth_validate_new_user($form, &$form_state) {
   $username = $form_state['values']['name'];
   $email = $form_state['values']['mail'];
   try {
-    RestAuthUser::createtest(
+    RestAuthUser::createTest(
       $restauth_conn, $username, null, array('email' => $email));
   }
   catch (RestAuthUserExists $e) {
@@ -228,7 +228,81 @@ function restauth_user_profile_form_submit($form, &$form_state) {
 }
 
 function restauth_form_user_pass_alter(&$form, $form_state) {
-  die('user_pass');
-  $form['#validate'][] = 'restauth_validate_new_user';
-  $form['#submit'] = array('restauth_user_register_submit');
+  $form['name']['#description'] =
+    t('<strong>Note:</strong> e-mail only works if you have logged in through this site before.');
+  $form['#validate'][] = 'restauth_user_pass_validate';
+}
+
+/**
+ * Validate the password reset request form.
+ *
+ * This function first tries to find a local user via username or email and
+ * only if that doesn't work, queries RestAuth for the username.
+ *
+ * Note that if RestAuth is queried, the user has to have an e-mail address
+ * defined. If that is not the case, Drupal will act as if the user were
+ * unknown.
+ */
+function restauth_user_pass_validate(&$form, $form_state) {
+  $name = trim($form_state['values']['name']);
+
+  // first, we try to load by email, if that works, we don't need a
+  // RestAuth request
+  $account = user_load_by_mail($name);
+  if (!$account) { // try to load by username
+    $account = user_load_by_name($name);
+
+    if ($account && ! $account->mail) {
+      $restauth_user = get_restauth_user($name);
+      try {
+        $restauth_email = $restauth_user->getProperty('email');
+        $account = user_save($account, array('mail' => $restauth_email));
+      }
+      catch (RestAuthResourceNotFound $e) {
+        form_set_error('name', t('Sorry, %name exists but has no e-mail address defined.',
+          array('%name' => $name)));
+        return;
+      }
+      catch (RestAuthException $e) {
+        form_set_error('name', general_exception_msg());
+        return;
+      }
+    }
+
+    if (!$account) {  // name loading failed, try RestAuth
+      try {
+        $restauth_user = RestAuthUser::get(get_restauth_connection(), $name);
+        $restauth_email = $restauth_user->getProperty('email');
+
+        // copied from user_external_login_register (minus the login part)
+        $account = user_external_load($name);
+        if (!$account) {
+          // Register this new user.
+          $userinfo = array(
+            'name' => $name,
+            //'pass' => user_password(),
+            'mail' => $restauth_email,
+            'init' => $name,
+            'status' => 1,
+            'access' => REQUEST_TIME
+          );
+
+          $account = user_save(drupal_anonymous_user(), $userinfo);
+          // Terminate if an error occurred during user_save().
+          if (!$account) {
+            drupal_set_message(t("Error saving user account."), 'error');
+            return;
+          }
+          user_set_authmaps($account, array("authname_$module" => $name));
+        }
+      }
+      catch (RestAuthResourceNotFound $e) {
+        form_set_error('name', t('Sorry, %name is not recognized as a user name or an e-mail address.',
+                       array('%name' => $name)));
+      }
+      catch (RestAuthException $e) {
+        form_set_error('name', general_exception_msg());
+      }
+    }
+  }
 }
