@@ -7,10 +7,12 @@
  */
 
 require_once('RestAuth/restauth.php');
+$_restauth_connection;  // global variable so we only get the connection once
 
-$_restauth_connection;
 
-
+/**
+ * Singleton method for getting a RestAuth connection.
+ */
 function get_restauth_connection() {
   global $_restauth_connection;
   if (is_null($_restauth_connection)) {
@@ -19,10 +21,19 @@ function get_restauth_connection() {
   }
   return $_restauth_connection;
 }
+/**
+ * Shortcut for getting a RestAuth user object.
+ *
+ * Note that this function in no way guarantees, that this user exists.
+ */
 function get_restauth_user($username) {
   $restauth_conn = get_restauth_connection();
   return new RestAuthUser($restauth_conn, $username);
 }
+
+/**
+ * Returns the error string used when RestAuth authentication doesn't work.
+ */
 function general_exception_msg() {
   return t("An error occured at our authentication server. Please try again later.");
 }
@@ -79,7 +90,7 @@ function restauth_login_validate($form, &$form_state) {
 }
 
 /**
- * User registration form. user-register-form
+ * Alter the user registration form.
  */
 function restauth_form_user_register_form_alter(&$form, $form_state) {
   $form['#validate'][] = 'restauth_validate_new_user';
