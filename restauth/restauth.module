@@ -24,7 +24,10 @@ function get_restauth_connection() {
 }
 function get_restauth_user($username) {
   $restauth_conn = get_restauth_connection();
-  return new RestAuthUser($conn, $username);
+  return new RestAuthUser($restauth_conn, $username);
+}
+function general_exception_msg() {
+  return t("An error occured at our authentication server. Please try again later.");
 }
 
 
@@ -56,6 +59,8 @@ function restauth_form_user_login_block_alter(&$form, $form_state) {
 /**
  * TODO: Get user by name like here:
  *   https://api.drupal.org/api/drupal/modules!user!user.module/function/user_authenticate/7
+ *
+ * Note: We currently get two messages.
  */
 function restauth_login_validate($form, &$form_state) {
   global $user;
@@ -79,21 +84,42 @@ function restauth_form_user_register_form_alter(&$form, $form_state) {
 }
 
 function restauth_validate_new_user($form, &$form_state) {
+  // @todo: if form already has errors, skip restauth calls?
   $restauth_conn = get_restauth_connection();
   $username = $form_state['values']['name'];
   $email = $form_state['values']['mail'];
   try {
-    RestAuthUser::createtest($restauth_conn, $username, null, array('email' => $email));
+    RestAuthUser::createtest(
+      $restauth_conn, $username, null, array('email' => $email));
   }
   catch (RestAuthUserExists $e) {
     form_set_error('name', t("User already exists."));
   }
   catch (RestAuthException $e) {
-    form_set_error('name', t("Error communicating with the authentication server. Please try again later."));
+    form_set_error('name', general_exception_msg());
   }
 }
 /**
  * Overrides user_register_submit().
  */
-function restauth_user_register_submit() {
+function restauth_user_register_submit($form, &$form_state) {
+  $restauth_conn = get_restauth_connection();
+  $username = $form_state['values']['name'];
+  $email = $form_state['values']['mail'];
+
+  // NOTE: Any exception is very unlikely, since we just tested everything with
+  // restauth_validate_new_user.
+  try {
+    $restauth_user = RestAuthUser::create(
+      $restauth_conn, $username, null, array('email' => $email));
+    user_register_submit($form, $form_state);
+  }
+  catch (RestAuthUserExists $e) {
+    drupal_set_message(t("User already exists."), 'error');
+  }
+  catch (RestAuthException $e) {
+    drupal_set_message(general_exception_msg(), 'error');
+  }
 }
+
+
