@@ -256,6 +256,7 @@ function restauth_user_pass_validate(&$form, $form_state) {
       $restauth_user = get_restauth_user($name);
       try {
         $restauth_email = $restauth_user->getProperty('email');
+        // save the email in the database...
         $account = user_save($account, array('mail' => $restauth_email));
       }
       catch (RestAuthResourceNotFound $e) {
