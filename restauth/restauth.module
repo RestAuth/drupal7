@@ -69,8 +69,7 @@ function restauth_form_user_login_form_alter(&$form, $form_state) {
   $form['#validate'] = array('user_login_name_validate', 'restauth_login_validate', 'user_login_final_validate');
 }
 /**
- * TODO: Get user by name like here:
- *   https://api.drupal.org/api/drupal/modules!user!user.module/function/user_authenticate/7
+ * Actual function that does the RestAuth authentication call.
  *
  * @todo: We currently get two error messages when the user already exists on
  *        both sites.
@@ -137,9 +136,13 @@ function restauth_user_register_submit($form, &$form_state) {
   }
 }
 
+/**
+ * Alter the user profile form.
+ *
+ * This form is displayed if an admin "edits" a user or if the user edits its
+ * own profile.
+ */
 function restauth_form_user_profile_form_alter(&$form, $form_state) {
-  // @todo: same form is used for editing a different user, so roles have to be
-  //        taken into account.
   // Get RestAuth data
   $restauth_user = get_restauth_user($form['#user']->name);
   $restauth_props = $restauth_user->getProperties();
