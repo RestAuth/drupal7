@@ -129,7 +129,7 @@ function restauth_form_user_profile_form_alter(&$form, $form_state) {
   //        taken into account.
   $form['#submit'] = array('restauth_user_profile_form_submit');
 
-  // get default values from RestAuth:
+  // Get default values from RestAuth
   $restauth_user = get_restauth_user($form['#user']->name);
   $restauth_props = $restauth_user->getProperties();
 
@@ -144,6 +144,7 @@ function restauth_form_user_profile_form_alter(&$form, $form_state) {
  */
 function restauth_user_profile_form_submit($form, &$form_state) {
   // @todo: status (blocked/active) and roles are not yet taken into account.
+  // @todo: Password is still saved locally.
 
   $username = $form_state['values']['name'];
   $password = $form_state['values']['pass'];
@@ -151,13 +152,17 @@ function restauth_user_profile_form_submit($form, &$form_state) {
 
   $restauth_user = get_restauth_user($username);
 
-  // set email if it was changed:
-  if ($email !== $form['#user']->mail) {
+  // Set email if it was changed
+  if ($email !== $form['account']['mail']['#default_value']) {
+    // #default_value set by form_alter hook to what is currently in RestAuth
     $restauth_user->setProperty('email', $email);
   }
 
-  // set password if it was set:
+  // Set password if it was set
   if (! empty($password)) {
     $restauth_user->setPassword($password);
   }
+
+  // Save data in local database
+  user_profile_form_submit($form, $form_state);
 }
