@@ -128,10 +128,23 @@ function restauth_form_user_profile_form_alter(&$form, $form_state) {
   // @todo: same form is used for editing a different user, so roles have to be
   //        taken into account.
   $form['#submit'] = array('restauth_user_profile_form_submit');
+
+  // get default values from RestAuth:
+  $restauth_user = get_restauth_user($form['#user']->name);
+  $restauth_props = $restauth_user->getProperties();
+
+  $form['account']['mail']['#default_value'] = $restauth_props['email'];
+  $form['account']['name']['#disabled'] = 1;  // disable renaming of account
 }
 
+/**
+ * Handle a a change in the user profile.
+ *
+ * This includes both changes by the user itself and by administrators.
+ */
 function restauth_user_profile_form_submit($form, &$form_state) {
   // @todo: status (blocked/active) and roles are not yet taken into account.
+
   $username = $form_state['values']['name'];
   $password = $form_state['values']['pass'];
   $email = $form_state['values']['mail'];
@@ -148,4 +161,3 @@ function restauth_user_profile_form_submit($form, &$form_state) {
     $restauth_user->setPassword($password);
   }
 }
-
