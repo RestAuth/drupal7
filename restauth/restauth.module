@@ -12,15 +12,12 @@ $_restauth_connection;
 
 
 function get_restauth_connection() {
-    global $_restauth_connection;
-    if (is_null($_restauth_connection)) {
-        $_restauth_connection = new RestAuthConnection(
-            'http://[::1]:8000',
-            'example.com',
-            'nopass'
-        );
-    }
-    return $_restauth_connection;
+  global $_restauth_connection;
+  if (is_null($_restauth_connection)) {
+    $_restauth_connection = new RestAuthConnection(
+      'http://[::1]:8000', 'example.com', 'nopass');
+  }
+  return $_restauth_connection;
 }
 function get_restauth_user($username) {
   $restauth_conn = get_restauth_connection();
@@ -65,6 +62,7 @@ function restauth_form_user_login_block_alter(&$form, $form_state) {
  */
 function restauth_login_validate($form, &$form_state) {
   // @todo: We still need to fetch the password, status and roles.
+
   global $user;
   $username = $form_state['values']['name'];
   $restauth_user = get_restauth_user($username);
@@ -87,6 +85,7 @@ function restauth_form_user_register_form_alter(&$form, $form_state) {
 
 function restauth_validate_new_user($form, &$form_state) {
   // @todo: if form already has errors, skip restauth calls?
+
   $restauth_conn = get_restauth_connection();
   $username = $form_state['values']['name'];
   $email = $form_state['values']['mail'];
