@@ -60,9 +60,11 @@ function restauth_form_user_login_block_alter(&$form, $form_state) {
  * TODO: Get user by name like here:
  *   https://api.drupal.org/api/drupal/modules!user!user.module/function/user_authenticate/7
  *
- * Note: We currently get two messages.
+ * @todo: We currently get two error messages when the user already exists on
+ *        both sites.
  */
 function restauth_login_validate($form, &$form_state) {
+  // @todo: We still need to fetch the password, status and roles.
   global $user;
   $username = $form_state['values']['name'];
   $restauth_user = get_restauth_user($username);
