@@ -126,14 +126,29 @@ function restauth_user_register_submit($form, &$form_state) {
 function restauth_form_user_profile_form_alter(&$form, $form_state) {
   // @todo: same form is used for editing a different user, so roles have to be
   //        taken into account.
-  $form['#submit'] = array('restauth_user_profile_form_submit');
-
-  // Get default values from RestAuth
+  // Get RestAuth data
   $restauth_user = get_restauth_user($form['#user']->name);
   $restauth_props = $restauth_user->getProperties();
+  $restauth_groups = $restauth_user->getGroups();
+  $restauth_group_names = array();
+  foreach ($restauth_groups as $group) {  // get array of names for matching
+    $restauth_group_names[] = $group->name;
+  }
 
+  // use our own form handlers
+  $form['#submit'] = array('restauth_user_profile_form_submit');
+
+  // Update default data
   $form['account']['mail']['#default_value'] = $restauth_props['email'];
   $form['account']['name']['#disabled'] = 1;  // disable renaming of account
+  $form['account']['roles']['#default_value'] = array("2");
+
+  // Update groups:
+  foreach ($form['account']['roles']['#options'] as $key => $role) {
+    if (in_array($role, $restauth_group_names)) {
+      $form['account']['roles']['#default_value'][] = $key;
+    }
+  }
 }
 
 /**
@@ -160,6 +175,47 @@ function restauth_user_profile_form_submit($form, &$form_state) {
   // Set password if it was set
   if (! empty($password)) {
     $restauth_user->setPassword($password);
+  }
+
+  // Calculate added and removed groups
+  $del_groups = array();
+  $add_groups = array();
+  $submitted = $form['account']['roles']['#value'];
+  $original = $form['account']['roles']['#default_value'];
+  foreach ($form['account']['roles']['#options'] as $key => $role) {
+    if (array_key_exists($key, $submitted) && ! in_array($key, $original)) {
+      $add_groups[] = $role;
+    }
+    elseif (! array_key_exists($key, $submitted) && in_array($key, $original)) {
+      $del_groups[] = $role;
+    }
+  }
+
+  // Actually add/remove groups
+  foreach ($add_groups as $group) {
+    try {
+      $restauth_user->addGroup($group);
+    }
+    catch (RestAuthResourceNotFound $e) {
+      // create group if it doesn't exist
+      $restauth_group = RestAuthGroup::create(get_restauth_connection(), $group);
+      $restauth_group->addUser($username);
+    }
+    catch (RestAuthException $e) {
+      drupal_set_message(general_exception_msg(), 'error');
+    }
+  }
+  foreach ($del_groups as $group) {
+    try {
+      $restauth_user->removeGroup($group);
+    }
+    catch (RestAuthResourceNotFound $e) {
+      // create group if it doesn't exist
+      $restauth_group = RestAuthGroup::create(get_restauth_connection(), $group);
+    }
+    catch (RestAuthException $e) {
+      drupal_set_message(general_exception_msg(), 'error');
+    }
   }
 
   // Save data in local database
