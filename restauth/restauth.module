@@ -249,9 +249,14 @@ function restauth_user_pass_validate(&$form, $form_state) {
   // first, we try to load by email, if that works, we don't need a
   // RestAuth request
   $account = user_load_by_mail($name);
+
+  // Could not find user by email-address
   if (!$account) { // try to load by username
     $account = user_load_by_name($name);
 
+    // Check if the user has an email-address defined. If not, we need to fetch
+    // it from RestAuth. It's an error if no email-address exists, because we
+    // cannot send a reset email.
     if ($account && ! $account->mail) {
       $restauth_user = get_restauth_user($name);
       try {
@@ -270,7 +275,9 @@ function restauth_user_pass_validate(&$form, $form_state) {
       }
     }
 
-    if (!$account) {  // name loading failed, try RestAuth
+    // User is not at all known in the local database, so we try to query
+    // RestAuth for a user and email address
+    if (!$account) {
       try {
         $restauth_user = RestAuthUser::get(get_restauth_connection(), $name);
         $restauth_email = $restauth_user->getProperty('email');
