@@ -1,5 +1,5 @@
 <?php
-// vim: tw=79:expandtab:tabstop=2:shiftwidth=2
+// vim: set filetype=php expandtab tabstop=2 shiftwidth=2 autoindent smartindent:
 
 /**
  * Resources:
