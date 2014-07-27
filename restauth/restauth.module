@@ -142,7 +142,9 @@ function restauth_form_user_profile_form_alter(&$form, $form_state) {
   $form['#submit'] = array('restauth_user_profile_form_submit');
 
   // Update default data
-  $form['account']['mail']['#default_value'] = $restauth_props['email'];
+  $email = array_key_exists('email', $restauth_props)
+           ? $restauth_props['email'] : '';
+  $form['account']['mail']['#default_value'] = $email;
   $form['account']['name']['#description'] = '';
   $form['account']['name']['#disabled'] = 1;  // disable renaming of account
   $form['account']['roles']['#default_value'] = array(DRUPAL_AUTHENTICATED_RID);
