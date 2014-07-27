@@ -141,7 +141,7 @@ function restauth_form_user_profile_form_alter(&$form, $form_state) {
   // Update default data
   $form['account']['mail']['#default_value'] = $restauth_props['email'];
   $form['account']['name']['#disabled'] = 1;  // disable renaming of account
-  $form['account']['roles']['#default_value'] = array("2");
+  $form['account']['roles']['#default_value'] = array(DRUPAL_AUTHENTICATED_RID);
 
   // Update groups:
   foreach ($form['account']['roles']['#options'] as $key => $role) {
@@ -157,7 +157,6 @@ function restauth_form_user_profile_form_alter(&$form, $form_state) {
  * This includes both changes by the user itself and by administrators.
  */
 function restauth_user_profile_form_submit($form, &$form_state) {
-  // @todo: status (blocked/active) and roles are not yet taken into account.
   // @todo: Password is still saved locally.
 
   $username = $form_state['values']['name'];
