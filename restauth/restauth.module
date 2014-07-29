@@ -155,8 +155,19 @@ function restauth_form_user_profile_form_alter(&$form, $form_state) {
   if (variable_get('restauth_server')) {
     // Get RestAuth data
     $restauth_user = get_restauth_user($form['#user']->name);
-    $restauth_props = $restauth_user->getProperties();
-    $restauth_groups = $restauth_user->getGroups();
+    try {
+      $restauth_props = $restauth_user->getProperties();
+      $restauth_groups = $restauth_user->getGroups();
+    }
+    catch (RestAuthResourceNotFound $e) {
+      drupal_set_message(t("User not found in RestAuth."), 'error');
+      $form['actions']['submit']['#disabled'] = TRUE;
+      return;
+    }
+    catch (RestAuthException $e) {
+      drupal_set_message(general_exception_msg(), 'error');
+      return;
+    }
     $restauth_group_names = array();
     foreach ($restauth_groups as $group) {  // get array of names for matching
       $restauth_group_names[] = $group->name;
@@ -246,6 +257,11 @@ function restauth_user_profile_form_submit($form, &$form_state) {
     catch (RestAuthException $e) {
       drupal_set_message(general_exception_msg(), 'error');
     }
+  }
+
+  // remove password from form if we should not store hashes:
+  if (! variable_get(restauth_local_hash_storage)) {
+    $form_state['values']['pass'] = '';
   }
 
   // Save data in local database
