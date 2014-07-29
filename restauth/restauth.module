@@ -339,6 +339,7 @@ function restauth_user_pass_validate(&$form, $form_state) {
           // Register this new user.
           $userinfo = array(
             'name' => $name,
+            // @todo: check setting if we should hash password
             //'pass' => user_password(),
             'mail' => $restauth_email,
             'init' => $name,
