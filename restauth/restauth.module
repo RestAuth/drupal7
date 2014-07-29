@@ -260,12 +260,20 @@ function restauth_user_profile_form_submit($form, &$form_state) {
   }
 
   // remove password from form if we should not store hashes:
-  if (! variable_get(restauth_local_hash_storage)) {
+  if (! variable_get('restauth_local_hash_storage')) {
     $form_state['values']['pass'] = '';
   }
 
   // Save data in local database
   user_profile_form_submit($form, $form_state);
+
+  if (! variable_get('restauth_local_hash_storage')) {
+    $record = array(
+      'uid' => $form['#user']->uid,
+      'pass' => '',
+    );
+    $success = drupal_write_record('users', $record, 'uid');
+  }
 }
 
 function restauth_form_user_pass_alter(&$form, $form_state) {
