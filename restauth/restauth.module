@@ -440,7 +440,7 @@ function restauth_form($form, &$form_state) {
     '#default_value' => variable_get('restauth_server'),
     '#size' => 50,
     '#maxlength' => 50,
-    '#description' => t('URL auf your RestAuth server, e.g. <em>https://auth.example.com</em>.'),
+    '#description' => t('URL of RestAuth server, e.g. <em>https://auth.example.com</em>.'),
     '#required' => TRUE,
   );
   $form['restauth_server_user'] = array(
