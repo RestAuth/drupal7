@@ -240,7 +240,7 @@ function restauth_user_register_submit($form, &$form_state) {
 
     // Add user to the authmap table:
     user_set_authmaps($form_state['user'],
-      array("authname_restauth" => $username));
+      array("authname_restauth" => strtolower($username)));
   }
   catch (RestAuthUserExists $e) {
     drupal_set_message(t("User already exists."), 'error');
