@@ -225,8 +225,6 @@ function restauth_validate_new_user($form, &$form_state) {
 }
 /**
  * Overrides user_register_submit().
- *
- * @todo: Add to the authmap table.
  */
 function restauth_user_register_submit($form, &$form_state) {
   $restauth_conn = get_restauth_connection();
@@ -239,6 +237,10 @@ function restauth_user_register_submit($form, &$form_state) {
     $restauth_user = RestAuthUser::create(
       $restauth_conn, $username, NULL, array('email' => $email));
     user_register_submit($form, $form_state);
+
+    // Add user to the authmap table:
+    user_set_authmaps($form_state['user'],
+      array("authname_restauth" => $username));
   }
   catch (RestAuthUserExists $e) {
     drupal_set_message(t("User already exists."), 'error');
