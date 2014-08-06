@@ -183,6 +183,8 @@ function restauth_validate_new_user($form, &$form_state) {
 }
 /**
  * Overrides user_register_submit().
+ *
+ * @todo: Add to the authmap table.
  */
 function restauth_user_register_submit($form, &$form_state) {
   $restauth_conn = get_restauth_connection();
