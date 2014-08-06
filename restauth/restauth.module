@@ -151,9 +151,9 @@ function restauth_form_user_login_form_alter(&$form, $form_state) {
  *
  * @todo: We currently get two error messages when the user already exists on
  *        both sites.
+ * @todo: We still need to fetch the password, status and roles.
  */
 function restauth_login_validate($form, &$form_state) {
-  // @todo: We still need to fetch the password, status and roles.
   global $user;
   $username = strtolower($form_state['values']['name']);
   $restauth_user = get_restauth_user($username);
