@@ -88,7 +88,7 @@ function restauth_add_local_user($name, $email) {
     drupal_set_message(t("Error saving user account."), 'error');
     return FALSE;
   }
-//  user_set_authmaps($account, array("authname_restauth" => $name));
+  user_set_authmaps($account, array("authname_restauth" => $name));
   return $account;
 }
 
