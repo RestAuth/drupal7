@@ -66,6 +66,8 @@ function user_load_by_name_nocase($name) {
 
 /**
  * Add a user to the local "user" database table.
+ *
+ * @todo: Handle password.
  */
 function restauth_add_local_user($name, $email) {
   $name = strtolower($name);
