@@ -37,4 +37,9 @@ a reference server, this would mean:
 
 Drupal roles are directly mapped to standard RestAuth groups with the same
 name. Drupal updates user roles from RestAuth when a user logs in or when the
-users profile is updated.
+users profile is updated. In general, it is best to migrate roles to RestAuth
+before enabling the module, e.g. for the standard administrator role:
+
+    restauth-group add --service www.example.com administrator
+    restauth-group add-user --service www.example.com administrator username
+    # add further users...
