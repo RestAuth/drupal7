@@ -35,6 +35,21 @@ function get_restauth_user($username) {
 }
 
 /**
+ * Get group names of a RestAuth user.
+ */
+function get_restauth_user_groups($user) {
+  $groups = $user->getGroups();
+
+  $group_names = array();
+  // Get array of names for matching.
+  foreach ($groups as $group) {
+    $group_names[] = $group->name;
+  }
+
+  return $group_names;
+}
+
+/**
  * Returns the error string used when RestAuth authentication doesn't work.
  */
 function general_exception_msg() {
@@ -62,6 +77,17 @@ function user_external_load_nocase($authname) {
 function user_load_by_name_nocase($name) {
   $sql = "SELECT * FROM {users} WHERE LOWER(name) = LOWER(:name) AND status = 1";
   return db_query($sql, array(':name' => $name))->fetchObject();
+}
+
+/**
+ * Transform a array of group names into an array suitable for user_save().
+ *
+ * Note that group names that don't match any local role will be silently
+ * discareded.
+ */
+function get_roles_from_groupnames($names) {
+  $roles = user_roles(TRUE);
+  return array_intersect($roles, $names);
 }
 
 /**
@@ -163,6 +189,23 @@ function restauth_login_validate($form, &$form_state) {
   if ($restauth_user->verifyPassword($form_state['values']['pass'])) {
     // This is a correct login, fetch user from the database.
 
+    // Fetch data so it can be saved to the database.
+    try {
+      $restauth_email = $restauth_user->getProperty('email');
+    }
+    catch (RestAuthResourceNotFound $e) {
+      $restauth_email = NULL;
+    }
+
+    try {
+      // Groups are handled in a try/catch block separate from email, because
+      // the email is not an error and groups still have to be fetched.
+      $restauth_groups = get_restauth_user_groups($restauth_user);
+    }
+    catch (RestAuthResourceNotFound $e) {
+      $restauth_groups = array();
+    }
+
     $user = user_external_load_nocase($username);
     if ($user === FALSE) {
       // User not in the authmap table, try getting it from the users table.
@@ -170,12 +213,6 @@ function restauth_login_validate($form, &$form_state) {
 
       if ($user === FALSE) {
         // Not in the user table either, so never logged in here before.
-        try {
-          $restauth_email = $restauth_user->getProperty('email');
-        }
-        catch (RestAuthResourceNotFound $e) {
-          $restauth_email = NULL;
-        }
         $user = restauth_add_local_user($username, $restauth_email);
       }
       else {
@@ -183,6 +220,12 @@ function restauth_login_validate($form, &$form_state) {
         user_set_authmaps($user, array("authname_restauth" => $username));
       }
     }
+
+    // Save roles and email address.
+    user_save($user, array(
+      'roles' => get_roles_from_groupnames($restauth_groups),
+      'mail' => $restauth_email,
+    ));
 
     $form_state['uid'] = $user->uid;
   }
@@ -262,7 +305,7 @@ function restauth_form_user_profile_form_alter(&$form, $form_state) {
     $restauth_user = get_restauth_user($form['#user']->name);
     try {
       $restauth_props = $restauth_user->getProperties();
-      $restauth_groups = $restauth_user->getGroups();
+      $restauth_groups = get_restauth_user_groups($restauth_user);
     }
     catch (RestAuthResourceNotFound $e) {
       drupal_set_message(t("User not found in RestAuth."), 'error');
@@ -272,11 +315,6 @@ function restauth_form_user_profile_form_alter(&$form, $form_state) {
     catch (RestAuthException $e) {
       drupal_set_message(general_exception_msg(), 'error');
       return;
-    }
-    $restauth_group_names = array();
-    // Get array of names for matching.
-    foreach ($restauth_groups as $group) {
-      $restauth_group_names[] = $group->name;
     }
 
     // Use our own form handlers.
@@ -292,7 +330,7 @@ function restauth_form_user_profile_form_alter(&$form, $form_state) {
 
     // Update groups.
     foreach ($form['account']['roles']['#options'] as $key => $role) {
-      if (in_array($role, $restauth_group_names)) {
+      if (in_array($role, $restauth_groups)) {
         $form['account']['roles']['#default_value'][] = $key;
       }
     }
