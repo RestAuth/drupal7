@@ -92,16 +92,12 @@ function get_roles_from_groupnames($names) {
 
 /**
  * Add a user to the local "user" database table.
- *
- * @todo: Handle password.
  */
 function restauth_add_local_user($name, $email) {
   $name = strtolower($name);
 
   $userinfo = array(
     'name' => $name,
-    // @todo: check setting if we should hash password
-    // 'pass' => user_password(),
     'mail' => $email,
     'init' => $name,
     'status' => 1,
