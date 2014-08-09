@@ -10,9 +10,10 @@ logged in at the specific Drupal site before).
 Installation
 ------------
 
-The module is not yet hosted on drupal.org. So clone the repository and enable
-it in the webinterface. You need to configure a RestAuth server and credentials
-before the module does anything.
+The module is not yet hosted on drupal.org. So clone the repository, symlink
+the ``restauth`` repository into your modules directory and enable it in the
+webinterface. You need to configure a RestAuth server and credentials before
+the module does anything.
 
 Once the module is enabled and configured, Drupal uses RestAuth as its only
 source for login validation and for roles. If you enable this plugin on an
@@ -43,3 +44,12 @@ before enabling the module, e.g. for the standard administrator role:
     restauth-group add --service www.example.com administrator
     restauth-group add-user --service www.example.com administrator username
     # add further users...
+
+ToDo
+----
+
+* Publich module on drupal.org
+* Mass-editing of roles
+* Password reset functionality should only (or just first?) query the RestAuth
+  database.
+
