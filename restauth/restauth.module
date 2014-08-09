@@ -321,6 +321,14 @@ function restauth_form_user_profile_form_alter(&$form, $form_state) {
       return;
     }
 
+    // If the user edits his own password or email, she/he has to enter their
+    // own current password as well. If present, override the validation
+    // function for that:
+    if (in_array('user_validate_current_pass', $form['#validate'])) {
+      $key = array_search('user_validate_current_pass', $form['#validate']);
+      $form['#validate'][$key] = 'restauth_user_validate_current_pass';
+    }
+
     // Use our own form handlers.
     $form['#submit'] = array('restauth_user_profile_form_submit');
 
@@ -337,6 +345,28 @@ function restauth_form_user_profile_form_alter(&$form, $form_state) {
       if (in_array($role, $restauth_groups)) {
         $form['account']['roles']['#default_value'][] = $key;
       }
+    }
+  }
+}
+
+/**
+ * Replace user_validate_current_pass() which validates the current password.
+ *
+ * Most of the code in this function is directly copied from said function.
+ */
+function restauth_user_validate_current_pass(&$form, &$form_state) {
+  $account = $form['#user'];
+  foreach ($form_state['values']['current_pass_required_values'] as $key => $name) {
+    if ((strlen(trim($form_state['values'][$key])) > 0) && ($form_state['values'][$key] != $account->$key)) {
+      $restauth_user = get_restauth_user($account->name);
+
+      if (!$restauth_user->verifyPassword($form_state['values']['current_pass'])) {
+        form_set_error('current_pass', t("Your current password is missing or incorrect; it's required to change the %name.", array('%name' => $name)));
+        form_set_error($key);
+      }
+
+      // We only need to check the password once.
+      break;
     }
   }
 }
