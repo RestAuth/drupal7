@@ -347,8 +347,6 @@ function restauth_form_user_profile_form_alter(&$form, $form_state) {
  * This includes both changes by the user itself and by administrators.
  */
 function restauth_user_profile_form_submit($form, &$form_state) {
-  // @todo: Password is still saved locally.
-
   $username = $form_state['values']['name'];
   $password = $form_state['values']['pass'];
   $email = $form_state['values']['mail'];
@@ -414,14 +412,6 @@ function restauth_user_profile_form_submit($form, &$form_state) {
 
   // Save data in local database.
   user_profile_form_submit($form, $form_state);
-
-  if (!variable_get('restauth_local_hash_storage')) {
-    $record = array(
-      'uid' => $form['#user']->uid,
-      'pass' => '',
-    );
-    $success = drupal_write_record('users', $record, 'uid');
-  }
 }
 
 /**
