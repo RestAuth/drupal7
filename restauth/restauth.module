@@ -179,7 +179,6 @@ function restauth_form_user_login_form_alter(&$form, $form_state) {
  *
  * @todo: We currently get two error messages when the user already exists on
  *        both sites.
- * @todo: We still need to fetch roles upon login.
  */
 function restauth_login_validate($form, &$form_state) {
   global $user;
@@ -222,10 +221,15 @@ function restauth_login_validate($form, &$form_state) {
     }
 
     // Save roles and email address.
-    user_save($user, array(
+    $user_edit = array(
       'roles' => get_roles_from_groupnames($restauth_groups),
       'mail' => $restauth_email,
-    ));
+    );
+    if (variable_get('restauth_local_hash_storage')) {
+      // save password hash if requested
+      $user_edit['pass'] = $form_state['values']['pass'];
+    }
+    user_save($user, $user_edit);
 
     $form_state['uid'] = $user->uid;
   }
