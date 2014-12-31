@@ -45,6 +45,17 @@ before enabling the module, e.g. for the standard administrator role:
     restauth-group add-user --service www.example.com administrator username
     # add further users...
 
+Configure with drush
+--------------------
+
+If you shut yourself out of your drupal installation, it might be useful to
+configure the plugin from the command line with drush:
+
+    # print all variables:
+    drush -l restauth.net variable-get restauth_server
+    # e.g. set the RestAuth server:
+    drush -l restauth.net variable-set restauth_server https://auth.restauth.net
+
 ToDo
 ----
 
